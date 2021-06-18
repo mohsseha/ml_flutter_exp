@@ -1,240 +1,143 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-// ignore_for_file: public_member_api_docs
-
+import 'dart:ffi';
+import 'dart:math';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'dart:ui';
 import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:screenshot/screenshot.dart';
 
 void main() {
-  runApp(MyApp());
+  print("welcome to space, ace ! ");
+  Directory("/tmp/input")
+      .watch(events: FileSystemEvent.all, recursive: true)
+      .forEach((element) {
+    print("/TMP/INPUT CHANGED!! CHANGE TYPE: $element");
+    takeScreenshot();
+  });
+  runApp(App());
 }
 
-class MyApp extends StatelessWidget {
+final canSize = 500.0;
+final Random rd = Random();
+final int numColors = Colors.primaries.length;
+final Color darkBlue = Color.fromARGB(255, 18, 32, 47);
+
+ByteData imgBytes = ByteData((canSize * canSize).toInt());
+
+ScreenshotController screenshotController = ScreenshotController();
+
+class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Path Provider',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const MyHomePage(title: 'Path Provider'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  Future<Directory?>? _tempDirectory;
-  Future<Directory?>? _appSupportDirectory;
-  Future<Directory?>? _appLibraryDirectory;
-  Future<Directory?>? _appDocumentsDirectory;
-  Future<Directory?>? _externalDocumentsDirectory;
-  Future<List<Directory>?>? _externalStorageDirectories;
-  Future<List<Directory>?>? _listSlashTmpDirs;
-
-  void _requestTempDirectory() {
-    setState(() {
-      _tempDirectory = getTemporaryDirectory();
-    });
-  }
-
-  Widget _buildDirectory(
-      BuildContext context, AsyncSnapshot<Directory?> snapshot) {
-    SelectableText text = const SelectableText('');
-    if (snapshot.connectionState == ConnectionState.done) {
-      if (snapshot.hasError) {
-        text = SelectableText('Error: ${snapshot.error}');
-      } else if (snapshot.hasData) {
-        text = SelectableText('path: ${snapshot.data!.path}');
-      } else {
-        text = const SelectableText('path unavailable');
-      }
-    }
-    return text; //Padding(padding: const EdgeInsets.all(40.0), child: text);
-  }
-
-  Widget _buildDirectories(
-      BuildContext context, AsyncSnapshot<List<Directory>?> snapshot) {
-    SelectableText text = const SelectableText('');
-    if (snapshot.connectionState == ConnectionState.done) {
-      if (snapshot.hasError) {
-        text = SelectableText('Error: ${snapshot.error}');
-      } else if (snapshot.hasData) {
-        final String combined =
-            snapshot.data!.map((Directory d) => d.path).join(', ');
-        text = SelectableText('paths: $combined');
-      } else {
-        text = const SelectableText('path unavailable');
-      }
-    }
-    return Padding(padding: const EdgeInsets.all(16.0), child: text);
-  }
-
-  void _requestAppDocumentsDirectory() {
-    setState(() {
-      _appDocumentsDirectory = getApplicationDocumentsDirectory();
-    });
-  }
-
-  void _requestAppSupportDirectory() {
-    setState(() {
-      _appSupportDirectory = getApplicationSupportDirectory();
-    });
-  }
-
-  void _requestAppLibraryDirectory() {
-    setState(() {
-      _appLibraryDirectory = getLibraryDirectory();
-    });
-  }
-
-  void _requestExternalStorageDirectory() {
-    setState(() {
-      _externalDocumentsDirectory = getExternalStorageDirectory();
-    });
-  }
-
-  void _requestExternalStorageDirectories(StorageDirectory type) {
-    setState(() {
-      _externalStorageDirectories = getExternalStorageDirectories(type: type);
-    });
-  }
-
-
-
-
-  void _requestExternalCacheDirectories() {
-    setState(() {
-      _listSlashTmpDirs = listSlashTmp();
-
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: SelectableText(widget.title),
-      ),
-      body: Center(
-        child: ListView(
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Material(
-                  elevation: 160.0,
-                  shape: BeveledRectangleBorder(
-                    borderRadius:
-                        BorderRadius.only(topLeft: Radius.circular(46.0)),
-                  ),
-                  child: ElevatedButton(
-                    child: const SelectableText('Get Temporary DirectoryXXXX'),
-                    style: ElevatedButton.styleFrom(
-                      primary: Colors.blue,
-                      onPrimary: Colors.white,
-                      shadowColor: Colors.red,
-                      elevation: 25,
-                    ),
-                    onPressed: _requestTempDirectory,
-                  )),
-            ),
-            FutureBuilder<Directory?>(
-                future: _tempDirectory, builder: _buildDirectory),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                child:
-                    const SelectableText('Get Application Documents Directory'),
-                onPressed: _requestAppDocumentsDirectory,
-              ),
-            ),
-            FutureBuilder<Directory?>(
-                future: _appDocumentsDirectory, builder: _buildDirectory),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                child:
-                    const SelectableText('Get Application Support Directory'),
-                onPressed: _requestAppSupportDirectory,
-              ),
-            ),
-            FutureBuilder<Directory?>(
-                future: _appSupportDirectory, builder: _buildDirectory),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                child:
-                    const SelectableText('Get Application Library Directory'),
-                onPressed: _requestAppLibraryDirectory,
-              ),
-            ),
-            FutureBuilder<Directory?>(
-                future: _appLibraryDirectory, builder: _buildDirectory),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                child: SelectableText(Platform.isIOS
-                    ? 'External directories are unavailable on iOS'
-                    : 'Get External Storage Directory'),
-                onPressed:
-                    Platform.isIOS ? null : _requestExternalStorageDirectory,
-              ),
-            ),
-            FutureBuilder<Directory?>(
-                future: _externalDocumentsDirectory, builder: _buildDirectory),
-            Column(children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: ElevatedButton(
-                  child: SelectableText(Platform.isIOS
-                      ? 'External directories are unavailable on iOS'
-                      : 'Get External Storage Directories'),
-                  onPressed: Platform.isIOS
-                      ? null
-                      : () {
-                          _requestExternalStorageDirectories(
-                            StorageDirectory.music,
-                          );
-                        },
-                ),
-              ),
-            ]),
-            FutureBuilder<List<Directory>?>(
-                future: _externalStorageDirectories,
-                builder: _buildDirectories),
-            Column(children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: ElevatedButton(
-                  child: SelectableText(Platform.isIOS
-                      ? 'External directories are unavailable on iOS'
-                      : 'Get External Cache Directories'),
-                  onPressed:
-                      Platform.isIOS ? null : _requestExternalCacheDirectories,
-                ),
-              ),
-            ]),
-            FutureBuilder<List<Directory>?>(
-                future: _listSlashTmpDirs, builder: _buildDirectories),
-          ],
+    final res = MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.dark().copyWith(scaffoldBackgroundColor: darkBlue),
+      home: Scaffold(
+        // Outer white container with padding
+        body: Container(
+          padding: EdgeInsets.symmetric(horizontal: 40, vertical: 80),
+          color: Colors.white,
+          // Inner yellow container
+          child: Screenshot(
+              controller: screenshotController,
+              child: Container(
+                width: double.infinity,
+                height: double.infinity,
+                color: Colors.yellow,
+                child: CustomPaint(painter: AxisPainter()),
+              )),
         ),
       ),
     );
+
+    takeScreenshot();
+    return res;
+  }
+}
+
+void takeScreenshot() {
+  screenshotController.capture().then((Uint8List? image) {
+    final len = image!.lengthInBytes;
+    print("DEBUG ABOUT TO write a screenshot $len");
+    new File("/tmp/plt.test.png").writeAsBytes(image);
+  }).catchError((onError) {
+    print(onError);
+  });
+}
+
+class AxisPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final mind = min(size.width, size.height);
+    final paintRed = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = .03 * mind
+      ..color = Colors.red;
+    final paintGreen = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = .03 * mind
+      ..color = Colors.green;
+    final thinLine = Paint()
+      ..style = PaintingStyle.stroke
+      ..color = Colors.black
+      ..strokeWidth = .01 * mind;
+
+    addNormedPathToCanvas(
+        canvas,
+        scale([
+          [.1, .9],
+          [.9, .9]
+        ], size),
+        paintRed);
+    addNormedPathToCanvas(
+        canvas,
+        scale([
+          [.1, .9],
+          [.1, .1]
+        ], size),
+        paintGreen);
+    final detailedTicksPath = scale([
+      [.1, .5],
+      [.1, .1],
+      [.1, .5],
+      [.15, .5],
+      [.1, .5],
+      [.1, .95],
+      [.1, .9],
+      [.05, .9],
+      [.5, .9],
+      [.5, .85],
+      [.5, .9],
+      [.9, .9]
+    ], size);
+    addNormedPathToCanvas(canvas, detailedTicksPath, thinLine);
   }
 
-  Future<List<Directory>?>? listSlashTmp() async {
-    print("attempting to open a folder, have no idea of this works:");
-    return null;
+  @override
+  bool shouldRepaint(AxisPainter oldDelegate) => false;
+}
+
+List<List<double>> scale(List<List<double>> list, ui.Size size) {
+  return list
+      .map((e) =>
+          List<double>.from([size.width * e.first, size.height * e.last]))
+      .toList();
+}
+
+void addNormedPathToCanvas(Canvas c, List<List<double>> li, Paint paint) {
+  final p = Path();
+  p.moveTo(li.first.first, li.first.last);
+  for (final t in li.sublist(1)) {
+    p.lineTo(t.first, t.last);
   }
+  c.drawPath(p, paint);
+}
+
+Future<void> writeToFile(ByteData data, String path) {
+  final buffer = data.buffer;
+  return new File(path)
+      .writeAsBytes(buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
 }
