@@ -20,12 +20,13 @@ void main() {
   runApp(App());
 }
 
-final canSize = 500.0;
-final Random rd = Random();
-final int numColors = Colors.primaries.length;
-final Color darkBlue = Color.fromARGB(255, 18, 32, 47);
-
-ByteData imgBytes = ByteData((canSize * canSize).toInt());
+final pltData = {
+  DateTime(2010, 1, 1): 3,
+  DateTime(2011, 1, 1): 1,
+  DateTime(2012, 1, 1): 23,
+  DateTime(2015, 1, 1): 3,
+  DateTime(2020, 1, 1): 32
+};
 
 ScreenshotController screenshotController = ScreenshotController();
 
@@ -33,28 +34,42 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final res = MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(scaffoldBackgroundColor: darkBlue),
-      home: Scaffold(
-        // Outer white container with padding
-        body: Container(
-          padding: EdgeInsets.symmetric(horizontal: 40, vertical: 80),
-          color: Colors.white,
-          // Inner yellow container
-          child: Screenshot(
+        debugShowCheckedModeBanner: false,
+        theme:
+            ThemeData.dark().copyWith(scaffoldBackgroundColor: Colors.blueGrey),
+        home: Scaffold(
+          // Outer white container with padding
+          body: Screenshot(
               controller: screenshotController,
               child: Container(
                 width: double.infinity,
                 height: double.infinity,
-                color: Colors.yellow,
-                child: CustomPaint(painter: AxisPainter()),
+                color: Colors.pink,
+                child: Figure(),
               )),
-        ),
-      ),
-    );
+        ));
 
     takeScreenshot();
     return res;
+  }
+}
+
+class Figure extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    return Stack(
+      children: <Widget>[
+        CustomPaint(
+          painter: AxisPainter(),
+          size: size,
+        ),
+        CustomPaint(
+          painter: AxisPainter(),
+          size: Size(size.width*.5,size.height*.87),
+        )
+      ],
+    );
   }
 }
 
